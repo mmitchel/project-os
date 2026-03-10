@@ -1,0 +1,24 @@
+From: Project OS <project@example.com>
+Date: Mon, 28 Apr 2026 00:00:00 +0000
+Subject: [PATCH] configure: remove polkit-gobject-1 dependency
+
+Remove polkit-gobject-1 from the mandatory PKG_CHECK_MODULES to allow
+building without polkit support.
+
+Signed-off-by: Project OS <project@example.com>
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+--- a/configure.ac
++++ b/configure.ac
+@@ -84,7 +84,7 @@ PKG_CHECK_MODULES(PKGDEP_GIO_UNIX, [gio-unix-2.0])
+ dnl These are the dependencies of the public librpmostree-1.0.0 shared library
+ PKG_CHECK_MODULES(PKGDEP_LIBRPMOSTREE, [gio-unix-2.0 >= 2.50.0 json-glib-1.0 ostree-1 >= 2023.7 rpm >= 4.16])
+ dnl And these additional ones are used by for the rpmostreeinternals C/C++ library
+-PKG_CHECK_MODULES(PKGDEP_RPMOSTREE, [polkit-gobject-1 libarchive])
++PKG_CHECK_MODULES(PKGDEP_RPMOSTREE, [libarchive])
+
+ AC_CHECK_DECL([RPMTRANS_FLAG_NOSYSUSERS], [
+   AC_DEFINE(HAVE_RPMTRANS_FLAG_NOSYSUSERS, 1, [Define if we have RPMTRANS_FLAG_NOSYSUSERS])

@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Project: Init and Sync Layers",
+      "type": "shell",
+      "command": "repo init -u . -m ${workspaceFolder}/manifests/default.xml && repo sync -j\"$(nproc)\"",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Project: Container Yocto Env",
+      "type": "shell",
+      "command": "docker run --rm -it -v $(pwd):$(pwd) --workdir $(pwd) crops/poky:ubuntu-22.04 /bin/bash -lc \"TEMPLATECONF=$(pwd)/layers/meta-project/conf/templates/default . ./layers/poky/oe-init-build-env build && exec /bin/bash -i\"",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

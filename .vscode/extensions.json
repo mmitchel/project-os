@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "yocto-project.yocto-bitbake",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-vscode.cpptools",
+    "ms-azuretools.vscode-containers"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "bitbake.pathToBitbakeFolder": "${workspaceFolder}/layers/poky/bitbake",
+  "bitbake.pathToEnvScript": "${workspaceFolder}/layers/poky/oe-init-build-env",
+  "bitbake.pathToBuildFolder": "${workspaceFolder}/build",
+  "bitbake.commandWrapper": "docker run --rm -v ${workspaceFolder}:${workspaceFolder} crops/poky:ubuntu-22.04 --workdir=${workspaceFolder} /bin/bash -c ",
+  "bitbake.workingDirectory": "${workspaceFolder}/build",
+  "bitbake.connectionTimeout": 120000,
+  "editor.suggest.enabled": false,
+  "editor.quickSuggestions": {
+    "comments": "off",
+    "strings": "off",
+    "other": "off"
+  },
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/layers/poky/bitbake/lib",
+    "${workspaceFolder}/layers/poky/meta/lib"
+  ],
+  "files.associations": {
+    "*.bb": "bitbake",
+    "*.bbappend": "bitbake",
+    "*.bbclass": "bitbake",
+    "*.conf": "bitbake",
+    "*.inc": "bitbake"
+  },
+  "files.exclude": {
+    "**/build/**/*.c": true,
+    "**/build/**/*.cc": true,
+    "**/build/**/*.cpp": true,
+    "**/build/**/*.cxx": true,
+    "**/build/**/*.h": true,
+    "**/build/**/*.hh": true,
+    "**/build/**/*.hpp": true,
+    "**/build/**/*.hxx": true
+  },
+  "C_Cpp.files.exclude": {
+    "**/build/**/*.c": true,
+    "**/build/**/*.cc": true,
+    "**/build/**/*.cpp": true,
+    "**/build/**/*.cxx": true,
+    "**/build/**/*.h": true,
+    "**/build/**/*.hh": true,
+    "**/build/**/*.hpp": true,
+    "**/build/**/*.hxx": true
+  },
+  "search.exclude": {
+    "**/build/tmp/**": true,
+    "**/build/sstate-cache/**": true,
+    "**/build/downloads/**": true,
+    "**/build/cache/**": true,
+    "**/buildhistory/**": true
+  },
+  "files.watcherExclude": {
+    "**/build/tmp/**": true,
+    "**/build/sstate-cache/**": true,
+    "**/build/downloads/**": true,
+    "**/build/cache/**": true,
+    "**/buildhistory/**": true
+  },
+  "terminal.integrated.enablePersistentSessions": false,
+  "terminal.integrated.persistentSessionReviveProcess": "never",
+  "[bitbake]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  },
+  "files.saveConflictResolution": "overwriteFileOnDisk",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/layers/poky/bitbake/lib",
+    "${workspaceFolder}/layers/poky/meta/lib"
+  ],
+}

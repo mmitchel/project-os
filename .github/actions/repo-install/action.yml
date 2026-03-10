@@ -1,0 +1,9 @@
+name: Repo Install
+description: Download and install the Google Repo tool
+
+runs:
+  using: composite
+  steps:
+    - name: Install repo tool
+      shell: bash
+      run: ${{ github.action_path }}/run.sh

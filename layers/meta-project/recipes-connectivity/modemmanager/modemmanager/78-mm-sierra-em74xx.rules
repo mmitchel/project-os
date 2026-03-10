@@ -1,0 +1,30 @@
+ACTION!="add|change|move|bind", GOTO="mm_project_sierra_end"
+
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1199", ATTRS{bInterfaceNumber}=="?*", ENV{.MM_USBIFNUM}="$attr{bInterfaceNumber}"
+
+# Match all child ports for the modem installed in unit 0.
+# Replace the DEVPATH pattern below with the stable path segment for that modem.
+DEVPATH=="*/REPLACE_WITH_MODEM_UNIT_0_DEVPATH/*", ENV{.MM_MODEM_UNIT}="0", ENV{ID_MM_PHYSDEV_UID}="sierra-modem-unit0", GOTO="mm_project_sierra_port_types"
+
+# Match all child ports for the modem installed in unit 1.
+# Replace the DEVPATH pattern below with the stable path segment for that modem.
+DEVPATH=="*/REPLACE_WITH_MODEM_UNIT_1_DEVPATH/*", ENV{.MM_MODEM_UNIT}="1", ENV{ID_MM_PHYSDEV_UID}="sierra-modem-unit1", GOTO="mm_project_sierra_port_types"
+
+GOTO="mm_project_sierra_end"
+
+LABEL="mm_project_sierra_port_types"
+
+# Common Sierra Wireless EM74xx/EM75xx port hints after modem unit identification:
+#   if 03: primary AT port
+#   if 02: raw NMEA/GPS port
+#   if 00: diag/QCDM port
+SUBSYSTEM=="net", ENV{.MM_MODEM_UNIT}=="?*", RUN+="/usr/sbin/ip link set dev %k alias modem%E{.MM_MODEM_UNIT}"
+# MBIM control interface (USB CDC class/subclass 02/0e)
+SUBSYSTEM=="usbmisc", KERNEL=="cdc-wdm*", ENV{.MM_MODEM_UNIT}=="?*", ATTRS{bInterfaceClass}=="02", ATTRS{bInterfaceSubClass}=="0e", GROUP="dialout", MODE="0660", SYMLINK+="modem%E{.MM_MODEM_UNIT}-mbim"
+# Non-MBIM cdc-wdm interfaces are treated as QMI control ports.
+SUBSYSTEM=="usbmisc", KERNEL=="cdc-wdm*", ENV{.MM_MODEM_UNIT}=="?*", ATTRS{bInterfaceSubClass}!="0e", GROUP="dialout", MODE="0660", SYMLINK+="modem%E{.MM_MODEM_UNIT}-qmi"
+SUBSYSTEM=="tty", ENV{.MM_MODEM_UNIT}=="?*", ENV{.MM_USBIFNUM}=="03", ENV{ID_MM_PORT_TYPE_AT_PRIMARY}="1", GROUP="dialout", MODE="0660", SYMLINK+="modem%E{.MM_MODEM_UNIT}-at"
+SUBSYSTEM=="tty", ENV{.MM_MODEM_UNIT}=="?*", ENV{.MM_USBIFNUM}=="02", ENV{ID_MM_PORT_TYPE_GPS}="1", GROUP="dialout", MODE="0660", SYMLINK+="modem%E{.MM_MODEM_UNIT}-gps"
+SUBSYSTEM=="tty", ENV{.MM_MODEM_UNIT}=="?*", ENV{.MM_USBIFNUM}=="00", ENV{ID_MM_PORT_TYPE_QCDM}="1", GROUP="dialout", MODE="0660", SYMLINK+="modem%E{.MM_MODEM_UNIT}-qcdm"
+
+LABEL="mm_project_sierra_end"

@@ -1,0 +1,147 @@
+# Target machine. raspberrypi5 targets the Raspberry Pi 5 single-board computer
+# (BCM2712 / ARM Cortex-A76).
+MACHINE ??= "raspberrypi5"
+
+# Distribution policy layer. poky-sota extends poky with OSTree/OTA update
+# support via meta-updater (Uptane/Aktualizr). Switch to "poky" to build
+# without OTA support.
+DISTRO ?= "project-os"
+
+# Extra image features enabled for development/debug builds:
+#   debug-tweaks          - applies a collection of insecure debug shortcuts
+#   allow-empty-password  - allow accounts with no password set
+#   allow-root-login      - allow root SSH/console login
+#   empty-root-password   - set the root password to empty
+#   serial-autologin-root - auto-login root on the serial console
+#   ssh-server-openssh    - install OpenSSH server
+#   package-management    - include the package manager and package database
+#   hwcodecs              - install machine-specific hardware video codec support
+#   nfs-server            - include NFS server kernel modules and utilities
+#   x11                   - include X11 runtime client libraries
+#   x11-base              - include a minimal X11 server
+EXTRA_IMAGE_FEATURES ?= "debug-tweaks allow-empty-password allow-root-login empty-root-password serial-autologin-root package-management hwcodecs nfs-server x11 x11-base"
+
+# Enable build statistics collection (task timing, CPU/memory usage per task).
+USER_CLASSES ?= "buildstats"
+
+# On patch failure, do nothing (noop) instead of aborting or opening a shell.
+# Change to "user" to drop into a resolution shell when a patch fails to apply.
+PATCHRESOLVE = "noop"
+
+# Remap relative to TOPDIR for bitbake in container volumes
+TMPDIR = "${TOPDIR}/tmp"
+DL_DIR = "${TOPDIR}/downloads"
+SSTATE_DIR = "${TOPDIR}/sstate-cache"
+
+# Disk space and inode monitoring thresholds for the build.
+# STOPTASKS: stop queuing new tasks when free space/inodes fall below the limit.
+# HALT:      abort the build immediately when space drops to a critical level.
+# Format: <action>,<path>,<min-free-space>,<min-free-inodes>
+BB_DISKMON_DIRS ??= "\
+    STOPTASKS,${TMPDIR},1G,100K \
+    STOPTASKS,${DL_DIR},1G,100K \
+    STOPTASKS,${SSTATE_DIR},1G,100K \
+    STOPTASKS,/tmp,100M,100K \
+    HALT,${TMPDIR},100M,1K \
+    HALT,${DL_DIR},100M,1K \
+    HALT,${SSTATE_DIR},100M,1K \
+    HALT,/tmp,10M,1K"
+
+# Enable SDL display output when building the native QEMU emulator so that
+# QEMU can open a graphical window on the build host (used by runqemu).
+PACKAGECONFIG:append:pn-qemu-system-native = " sdl"
+
+# Version of the local.conf file format. Increment when the format changes
+# in a way that requires manual migration of existing build directories.
+CONF_VERSION = "2"
+
+########################################
+
+# ---------------------------------------------------------------------------
+# Project specific includes
+# ---------------------------------------------------------------------------
+
+# Rust language features
+RUST_VERSION = "1.86.0"
+require conf/distro/include/rust_versions.inc
+
+# Pull in project-wide distro settings (parallelism, features, providers, etc.).
+require conf/distro/include/default.inc
+
+# Pull in project-wide machine feature defaults shared by all machines.
+require conf/machine/include/default.inc
+
+# Add a WSL override only when running under WSL2.
+DISTROOVERRIDES .= "${@':wsl2' if 'microsoft-standard-wsl2' in open('/proc/sys/kernel/osrelease', 'r').read().lower() else ''}"
+
+# ---------------------------------------------------------------------------
+# Disable classes for native packages
+# ---------------------------------------------------------------------------
+INHERIT:remove:class-native = "create-spdx"
+
+# ---------------------------------------------------------------------------
+# Bitbake resource use
+# ---------------------------------------------------------------------------
+# Parallelism: cap BitBake task threads, parse threads, and make jobs at 75% of
+# available CPU cores so the host stays responsive during builds.
+BB_NUMBER_THREADS ?= "${@max(1, int(oe.utils.cpu_count() * 75 / 100))}"
+BB_NUMBER_PARSE_THREADS ?= "${@max(1, int(oe.utils.cpu_count() * 75 / 100))}"
+PARALLEL_MAKE ?= "-j ${@max(1, int(oe.utils.cpu_count() * 75 / 100))}"
+
+# ---------------------------------------------------------------------------
+# Downloads (build/downloads) mirror
+# ---------------------------------------------------------------------------
+# Then set SOURCE_MIRROR_URL to the base URL served by your mirror, e.g.:
+#
+#   SOURCE_MIRROR_URL = "http://mirror.example.com/sources/"
+#   SOURCE_MIRROR_URL = "file:///mnt/mirror/yocto/sources/"
+
+# URL of the local source mirror.
+# Adjust this value for your environment before enabling this file.
+# SOURCE_MIRROR_URL ?= "file:///mnt/shared/build/downloads/"
+
+# Activate own-mirrors.bbclass — prepends SOURCE_MIRROR_URL to PREMIRRORS for
+# all fetcher protocols (cvs, svn, git, gitsm, hg, bzr, p4, osc, http/https,
+# ftp, npm, s3, crate, gs).
+# INHERIT += "own-mirrors"
+
+# Set BB_FETCH_PREMIRRORONLY = "1" to prevent BitBake from falling back to
+# upstream servers when a source is not found in the mirror.
+# Useful for air-gapped or reproducible offline build environments.
+# BB_FETCH_PREMIRRORONLY = "1"
+
+# ---------------------------------------------------------------------------
+# Shared-state (build/sstate-cache) mirror
+# ---------------------------------------------------------------------------
+# SSTATE_MIRRORS tells BitBake where to look for prebuilt sstate objects
+# before re-running tasks locally.  The value is a space-separated list of
+# "file://.* <mirror-url>/PATH" pairs.  The literal token "PATH" is
+# substituted at runtime with the relative sstate object path (e.g.
+# "universal/ab/ab12cd…_do_compile.tar.zst"), so it must be kept verbatim.
+#
+# Multiple mirrors can be stacked by appending additional pairs:
+#
+#   SSTATE_MIRRORS += "file://.* file:///mnt/local-sstate/PATH"
+#
+# Set BB_HASHSERVE_UPSTREAM to the hash equivalence server that generated
+# the remote sstate so that signature matching works correctly.
+# BB_HASHSERVE_UPSTREAM = "hashserv.yocto.io:8687"
+
+# SSTATE_MIRRORS ?= "file://.* file:///mnt/shared/build/sstate-cache/PATH"
+
+# EFI is not active by default on Raspberry Pi 5. Uncomment to enable it when
+# using a UEFI firmware such as the Raspberry Pi UEFI firmware project.
+# MACHINE_FEATURES:append = " efi"
+
+# Multiconfig for building the initramfs with musl libc. Uncomment both lines
+# to produce a musl-based initramfs alongside the main glibc image.
+# BBMULTICONFIG = "initramfs-musl"
+# bINITRAMFS_MULTICONFIG = "initramfs-musl"
+
+# EFI bootloader provider. Uncomment to select systemd-boot when EFI is enabled.
+# EFI_PROVIDER = "systemd-boot"
+
+# Optional systemd-boot tuning. Uncomment and set as needed.
+# SYSTEMD_BOOT_CFG = ""     # Path to a custom loader configuration file.
+# SYSTEMD_BOOT_ENTRIES = "" # Path to additional boot entry fragments.
+# SYSTEMD_BOOT_TIMEOUT = "" # Boot menu timeout in seconds (0 = auto-boot).

@@ -1,0 +1,49 @@
+From 3e0f6d8b8c40a5c71f2513dd8aa18d6f6b4a0001 Mon Sep 17 00:00:00 2001
+From: GitHub Copilot <copilot@github.com>
+Date: Tue, 28 Apr 2026 00:00:00 +0000
+Subject: [PATCH] rust/libdnf-sys: pass sysroot through to CMake
+
+The libdnf-sys build script invokes the cmake crate directly to build the
+libdnf submodule. In Yocto, pkg-config already knows the target sysroot,
+but the generated CMake invocation omits it, causing the compiler link test
+to fail to find crt objects and libc.
+
+Propagate PKG_CONFIG_SYSROOT_DIR into CMAKE_SYSROOT/CMAKE_FIND_ROOT_PATH and
+also add explicit --sysroot flags for C and C++ so CMake uses the same
+target sysroot as the rest of the recipe.
+
+Upstream-Status: Inappropriate [Yocto integration]
+Signed-off-by: GitHub Copilot <copilot@github.com>
+---
+ rust/libdnf-sys/build.rs | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/rust/libdnf-sys/build.rs b/rust/libdnf-sys/build.rs
+index f541853..229e8bb 100644
+--- a/rust/libdnf-sys/build.rs
++++ b/rust/libdnf-sys/build.rs
+@@ -1,4 +1,5 @@
+-use anyhow::Result;
++use anyhow::Result;
++use std::path::PathBuf;
+
+ fn main() -> Result<()> {
+     let libs = system_deps::Config::new().probe()?;
+@@ -11,7 +12,17 @@ fn main() -> Result<()> {
+-    let libdnf = cmake::Config::new("../../libdnf")
++    let mut libdnf = cmake::Config::new("../../libdnf");
++    if let Some(sysroot) = std::env::var_os("PKG_CONFIG_SYSROOT_DIR").filter(|s| !s.is_empty()) {
++        let sysroot = PathBuf::from(sysroot);
++        let sysroot_flag = format!("--sysroot={}", sysroot.display());
++        libdnf
++            .define("CMAKE_SYSROOT", &sysroot)
++            .define("CMAKE_FIND_ROOT_PATH", &sysroot)
++            .cflag(&sysroot_flag)
++            .cxxflag(&sysroot_flag);
++    }
++    let libdnf = libdnf
+         // Needed for hardened builds
+         .cxxflag("-fPIC")
+         // I picked /usr/libexec/rpm-ostree just because we need an
+--
+2.43.0

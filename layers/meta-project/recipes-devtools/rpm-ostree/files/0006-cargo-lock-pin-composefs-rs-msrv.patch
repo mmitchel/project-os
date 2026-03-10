@@ -1,0 +1,49 @@
+From 5409e8f1f3290d0f8d1a6c6756d98573fadb9999 Mon Sep 17 00:00:00 2001
+From: GitHub Copilot <copilot@github.com>
+Date: Mon, 28 Apr 2026 00:00:00 +0000
+Subject: [PATCH] Cargo.lock: pin composefs-rs below Rust 1.88 MSRV bump
+
+composefs-rs commit 78d9ec3 raises workspace rust-version to 1.88.0,
+which is newer than the rustc 1.86 toolchain in this Yocto build.
+Pin the lockfile's composefs-rs source revision to the last compatible
+commit so cargo can resolve dependencies without a toolchain upgrade.
+
+Upstream-Status: Inappropriate [Yocto toolchain compatibility]
+Signed-off-by: GitHub Copilot <copilot@github.com>
+---
+ Cargo.lock | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 725f99f..8bd0415 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -467,7 +467,7 @@ dependencies = [
+ [[package]]
+ name = "composefs"
+ version = "0.3.0"
+-source = "git+https://github.com/containers/composefs-rs?rev=e9008489375044022e90d26656960725a76f4620#e9008489375044022e90d26656960725a76f4620"
++source = "git+https://github.com/containers/composefs-rs?rev=651b47f1396bf50d35043351d140ce79846b7e46#651b47f1396bf50d35043351d140ce79846b7e46"
+ dependencies = [
+  "anyhow",
+  "hex",
+@@ -487,7 +487,7 @@ dependencies = [
+ [[package]]
+ name = "composefs-boot"
+ version = "0.3.0"
+-source = "git+https://github.com/containers/composefs-rs?rev=e9008489375044022e90d26656960725a76f4620#e9008489375044022e90d26656960725a76f4620"
++source = "git+https://github.com/containers/composefs-rs?rev=651b47f1396bf50d35043351d140ce79846b7e46#651b47f1396bf50d35043351d140ce79846b7e46"
+ dependencies = [
+  "anyhow",
+  "composefs",
+@@ -500,7 +500,7 @@ dependencies = [
+ [[package]]
+ name = "composefs-oci"
+ version = "0.3.0"
+-source = "git+https://github.com/containers/composefs-rs?rev=e9008489375044022e90d26656960725a76f4620#e9008489375044022e90d26656960725a76f4620"
++source = "git+https://github.com/containers/composefs-rs?rev=651b47f1396bf50d35043351d140ce79846b7e46#651b47f1396bf50d35043351d140ce79846b7e46"
+ dependencies = [
+  "anyhow",
+  "async-compression",
+--
+2.43.0

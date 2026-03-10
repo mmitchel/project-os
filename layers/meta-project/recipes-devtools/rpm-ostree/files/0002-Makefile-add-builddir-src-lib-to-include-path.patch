@@ -1,0 +1,29 @@
+From: Project OS <project@example.com>
+Date: Mon, 28 Apr 2026 00:00:00 +0000
+Subject: [PATCH] Makefile: add builddir/src/lib to include path
+
+rpmostree-version.h is generated into $(builddir)/src/lib by config.status,
+but compilation only searches $(srcdir)/src/lib. Include $(builddir)/src/lib
+for library and daemon/common CFLAGS so generated headers are found.
+
+Signed-off-by: Project OS <project@example.com>
+---
+ Makefile-lib.am        | 2 +-
+ Makefile-rpm-ostree.am | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile-lib.am b/Makefile-lib.am
+--- a/Makefile-lib.am
++++ b/Makefile-lib.am
+@@ -33,3 +33,3 @@ librpmostree_1_la_SOURCES = \
+-librpmostree_1_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/libglnx -I$(srcdir)/src/libpriv -I$(srcdir)/src/lib \
++librpmostree_1_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/libglnx -I$(srcdir)/src/libpriv -I$(srcdir)/src/lib -I$(builddir)/src/lib \
+	-fvisibility=hidden '-D_RPMOSTREE_EXTERN=__attribute((visibility("default"))) extern' \
+	$(PKGDEP_LIBRPMOSTREE_CFLAGS)
+diff --git a/Makefile-rpm-ostree.am b/Makefile-rpm-ostree.am
+--- a/Makefile-rpm-ostree.am
++++ b/Makefile-rpm-ostree.am
+@@ -70,2 +70,3 @@ rpmostree_common_cflags = -I$(srcdir)/src/app -I$(srcdir)/src/daemon \
+	-I$(srcdir)/src/lib -I$(srcdir)/src/libpriv -I$(libglnx_srcpath) \
++	-I$(builddir)/src/lib \
+	-DG_LOG_DOMAIN=\"rpm-ostreed\" \
