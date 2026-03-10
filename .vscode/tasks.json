@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "project-os: Init and Sync Layers",
+      "type": "shell",
+      "command": "repo init -u . -m ${workspaceFolder}/manifests/default.xml && repo sync -j\"$(nproc)\"",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+  ]
+}

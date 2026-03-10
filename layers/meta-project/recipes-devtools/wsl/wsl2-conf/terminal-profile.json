@@ -1,0 +1,9 @@
+{
+  "profiles": [
+    {
+      "antialiasingMode": "aliased",
+      "fontWeight": "bold",
+      "colorScheme": "Campbell"
+    }
+  ]
+}

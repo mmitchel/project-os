@@ -1,0 +1,58 @@
+name: Build and push containers to GHCR
+
+on:
+  workflow_dispatch:
+  # push:
+  #   paths:
+  #     - ".github/workflows/build-containers-push.yml"
+  #     - "containers/**"
+  # pull_request:
+  #   paths:
+  #     - ".github/workflows/build-containers-push.yml"
+  #     - "containers/**"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: containers-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-push:
+    name: Build and push ${{ matrix.name }}
+    runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - context: containers/ubuntu-20.04
+            name: ubuntu-20.04
+          - context: containers/ubuntu-22.04
+            name: ubuntu-22.04
+          - context: containers/ubuntu-24.04
+            name: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u ${{ github.actor }} --password-stdin ghcr.io
+
+      - name: Build container image
+        working-directory: ${{ matrix.context }}
+        run: |
+          image_repo=$(printf '%s' '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
+          docker build -t ghcr.io/${image_repo}/${{ matrix.name }}:latest .
+
+      - name: Push container image to GHCR
+        run: |
+          image_repo=$(printf '%s' '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
+          docker push ghcr.io/${image_repo}/${{ matrix.name }}:latest
+
+      - name: Log out of GHCR
+        if: always()
+        run: docker logout ghcr.io

@@ -1,0 +1,6 @@
+You can now run 'bitbake <target>'
+
+Common targets are:
+    core-image-project
+    core-image-minimal
+    core-image-full-cmdline

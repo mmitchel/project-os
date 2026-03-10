@@ -1,0 +1,25 @@
+# ---------------------------------------------------------------------------
+# PyO3 / setuptools-rust: fix CARGO_BUILD_TARGET triple mismatch
+# ---------------------------------------------------------------------------
+# meta-rust's rust_base_triple() forces vendor="-unknown", so RUST_HOST_SYS
+# becomes "x86_64-unknown-linux-gnu", which python_pyo3.bbclass propagates
+# into CARGO_BUILD_TARGET. The sysroot stdlib is compiled for
+# "x86_64-poky-linux", causing E0461 crate-not-found failures at build time.
+# Overriding to HOST_SYS matches the cargo config linker entry and the
+# installed stdlib – same fix used by bootc and rpm-ostree.
+# export CARGO_BUILD_TARGET = "${HOST_SYS}"
+
+# ---------------------------------------------------------------------------
+# Python SOURCE_DATE_EPOCH handling for setuptools
+# ---------------------------------------------------------------------------
+# Clamp SOURCE_DATE_EPOCH for Python package builds so wheel ZIP timestamps
+# are never before 1980-01-01 (ZIP format lower bound).
+do_compile:prepend() {
+    _python_wheel_class_inherited="${@'1' if (bb.data.inherits_class('setuptools3', d) or bb.data.inherits_class('setuptools3_legacy', d) or bb.data.inherits_class('python_setuptools_build_meta', d) or bb.data.inherits_class('python_setup_tools_build_meta', d) or bb.data.inherits_class('python_pep517', d)) else '0'}"
+    if [ "${_python_wheel_class_inherited}" = "1" ]; then
+        bbnote "${PN}: python wheel related class inherited"
+        if [ -z "${SOURCE_DATE_EPOCH}" ] || [ "${SOURCE_DATE_EPOCH}" -lt 315532800 ]; then
+            export SOURCE_DATE_EPOCH=315532800
+        fi
+    fi
+}

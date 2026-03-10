@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Project OS Build Fix <noreply@example.com>
+Date: Sat, 31 May 2026 12:30:00 +0000
+Subject: [PATCH] filan: fix printtime const assignment error
+
+Upstream-Status: Pending
+
+`asctime()` returns a mutable buffer. The local variable must not be const,
+because the code strips the trailing newline in-place.
+
+---
+ filan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/filan.c b/filan.c
+index dc56e44..70bcf62 100644
+--- a/filan.c
++++ b/filan.c
+@@ -1056,7 +1056,7 @@ const char *sockaddr_info(const struct sockaddr *sa, union sockaddr_union *sau,
+ }
+
+ static int printtime(FILE *outfile, time_t time) {
+-   const char *s;
++   char *s;
+
+    if (filan_rawoutput) {
+       fprintf(outfile, "\t"F_time, time);
+--
+2.43.0

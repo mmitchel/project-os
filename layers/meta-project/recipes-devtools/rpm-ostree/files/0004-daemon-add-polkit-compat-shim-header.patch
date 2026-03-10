@@ -1,0 +1,76 @@
+From: Project OS <project@example.com>
+Date: Mon, 28 Apr 2026 00:00:00 +0000
+Subject: [PATCH] daemon: add polkit compatibility shim header
+
+Signed-off-by: Project OS <project@example.com>
+---
+ src/daemon/polkit-compat.h | 57 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 57 insertions(+)
+ create mode 100644 src/daemon/polkit-compat.h
+
+diff --git a/src/daemon/polkit-compat.h b/src/daemon/polkit-compat.h
+new file mode 100644
+--- /dev/null
++++ b/src/daemon/polkit-compat.h
+@@ -0,0 +1,57 @@
++#pragma once
++
++#include <gio/gio.h>
++
++typedef struct _PolkitAuthority PolkitAuthority;
++typedef struct _PolkitSubject PolkitSubject;
++typedef struct _PolkitAuthorizationResult PolkitAuthorizationResult;
++
++typedef enum
++{
++  POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE = 0,
++  POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION = (1 << 0),
++} PolkitCheckAuthorizationFlags;
++
++static inline PolkitSubject *
++polkit_system_bus_name_new (const gchar *sender)
++{
++  (void)sender;
++  return NULL;
++}
++
++static inline PolkitAuthority *
++polkit_authority_get_sync (GCancellable *cancellable, GError **error)
++{
++  (void)cancellable;
++  g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
++                       "polkit support is disabled");
++  return NULL;
++}
++
++static inline PolkitAuthorizationResult *
++polkit_authority_check_authorization_sync (PolkitAuthority *authority, PolkitSubject *subject,
++                                           const gchar *action_id, GVariant *details,
++                                           PolkitCheckAuthorizationFlags flags,
++                                           GCancellable *cancellable, GError **error)
++{
++  (void)authority;
++  (void)subject;
++  (void)action_id;
++  (void)details;
++  (void)flags;
++  (void)cancellable;
++  g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
++                       "polkit support is disabled");
++  return NULL;
++}
++
++static inline gboolean
++polkit_authorization_result_get_is_authorized (PolkitAuthorizationResult *result)
++{
++  (void)result;
++  return FALSE;
++}
++
++G_DEFINE_AUTOPTR_CLEANUP_FUNC (PolkitAuthority, g_object_unref)
++G_DEFINE_AUTOPTR_CLEANUP_FUNC (PolkitSubject, g_object_unref)
++G_DEFINE_AUTOPTR_CLEANUP_FUNC (PolkitAuthorizationResult, g_object_unref)
+
+
+--
+2.45.2

@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Project OS Build Fix <noreply@example.com>
+Date: Sat, 31 May 2026 12:00:00 +0000
+Subject: [PATCH] libcpu: fix const qualifier in riscv_disasm bsearch result
+
+Upstream-Status: Pending
+
+`known` is a const lookup table. Store `bsearch()` result in a const pointer
+to avoid discarded-qualifiers errors when building with strict host toolchains.
+
+
+diff --git a/libcpu/riscv_disasm.c b/libcpu/riscv_disasm.c
+index 7c70bce7..f2bd2683 100644
+--- a/libcpu/riscv_disasm.c
++++ b/libcpu/riscv_disasm.c
+@@ -1256,7 +1256,7 @@
+		  if (rd != 0)
+		    op[last++] = REG (rd);
+		  struct known_csrs key = { csr, NULL };
+-		  struct known_csrs *found = bsearch (&key, known,
++		  const struct known_csrs *found = bsearch (&key, known,
+						      sizeof (known) / sizeof (known[0]),
+						      sizeof (known[0]),
+						      compare_csr);

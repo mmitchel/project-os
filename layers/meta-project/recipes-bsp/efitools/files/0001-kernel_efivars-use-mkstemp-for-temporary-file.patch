@@ -1,0 +1,27 @@
+From 5f9c0c4b6c7d6e42d4cf78f7a1f1d0d6f2f0a001 Mon Sep 17 00:00:00 2001
+From: Project <project@example.com>
+Date: Thu, 15 May 2026 00:00:00 +0000
+Subject: [PATCH] efitools: use mkstemp for temporary file creation
+
+mktemp is obsolete and not declared with the current build feature
+macros. Use mkstemp for the temporary file instead.
+
+Upstream-Status: Pending
+Signed-off-by: Project <project@example.com>
+---
+--- a/lib/kernel_efivars.c
++++ b/lib/kernel_efivars.c
+@@ -37,7 +37,12 @@
+
+ 	if (kernel_efi_path)
+ 		return;
+-	mktemp(fname);
++	fd = mkstemp(fname);
++	if (fd < 0) {
++		perror("mkstemp");
++		exit(1);
++	}
++	close(fd);
+ 	snprintf(cmdline, sizeof(cmdline), "mount -l > %s", fname);
+ 	ret = system(cmdline);
+ 	if (WEXITSTATUS(ret) != 0)

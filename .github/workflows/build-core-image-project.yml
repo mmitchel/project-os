@@ -1,0 +1,72 @@
+name: Build core-image-project
+
+on:
+  workflow_dispatch:
+    inputs:
+      template:
+        description: Template name under layers/meta-project/conf/templates, or all
+        required: true
+        type: choice
+        options:
+          - all
+          - machine-qemux86-64
+          - machine-qemuarm64
+          - machine-raspberrypi5
+          - machine-jetson-orin-nano-devkit-nvme
+        default: all
+  # push:
+  #   paths:
+  #     - ".github/workflows/build-core-image-project.yml"
+  #     - "manifests/**"
+  #     - "layers/meta-project/**"
+  # pull_request:
+  #   paths:
+  #     - ".github/workflows/build-core-image-project.yml"
+  #     - "manifests/**"
+  #     - "layers/meta-project/**"
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: yocto-project-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-project:
+    name: Build core-image-project (${{ matrix.template }})
+    if: ${{ inputs.template == 'all' || inputs.template == matrix.template }}
+    runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        template:
+          - machine-qemux86-64
+          - machine-qemuarm64
+          - machine-raspberrypi5
+          - machine-jetson-orin-nano-devkit-nvme
+    container:
+      image: ghcr.io/${{ github.repository }}/ubuntu-20.04:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout manifest repository
+        uses: actions/checkout@v4
+
+      - name: Initialize and sync upstream layers
+        uses: ./.github/actions/repo-sync
+        with:
+          manifest-uri: ${{ github.server_url }}/${{ github.repository }}
+          manifest-file: manifests/default.xml
+          manifest-branch: main
+
+      - name: Build core-image-project and sdk
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEMPLATECONF="${{ github.workspace }}/layers/meta-project/conf/templates/${{ matrix.template }}" \
+            . layers/poky/oe-init-build-env build >/dev/null
+          bitbake core-image-project # core-image-project-sdk

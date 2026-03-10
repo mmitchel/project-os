@@ -1,0 +1,35 @@
+name: Repo Sync
+description: Install the Google Repo tool, initialize manifests, and sync upstream layers
+
+inputs:
+  manifest-uri:
+    description: URI of the manifest repository
+    required: true
+  manifest-file:
+    description: Manifest file path (e.g., manifests/default.xml)
+    required: true
+    default: manifests/default.xml
+  manifest-branch:
+    description: Branch to check out in the manifest repository
+    required: true
+    default: main
+
+runs:
+  using: composite
+  steps:
+    - name: Install repo tool
+      shell: bash
+      run: |
+        set -euo pipefail
+        if command -v repo >/dev/null 2>&1; then
+          exit 0
+        fi
+        "${{ github.action_path }}/../repo-install/run.sh"
+
+    - name: Run repo sync
+      shell: bash
+      env:
+        MANIFEST_URI: ${{ inputs.manifest-uri }}
+        MANIFEST_FILE: ${{ inputs.manifest-file }}
+        MANIFEST_BRANCH: ${{ inputs.manifest-branch }}
+      run: ${{ github.action_path }}/run.sh

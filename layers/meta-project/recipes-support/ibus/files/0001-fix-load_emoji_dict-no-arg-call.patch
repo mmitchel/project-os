@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000001 Mon Sep 17 00:00:00 2001
+From: meta-project <meta-project@local>
+Date: Fri, 02 May 2026 00:00:00 +0000
+Subject: [PATCH] ibusenginesimple: fix load_emoji_dict called with stray argument
+
+load_emoji_dict() is defined with no parameters but is called as
+load_emoji_dict(simple) at line 523. Remove the stray argument to fix
+the build error: "too many arguments to function 'load_emoji_dict';
+expected 0, have 1".
+
+Upstream-Status: Pending
+
+Signed-off-by: meta-project <meta-project@local>
+---
+ src/ibusenginesimple.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/ibusenginesimple.c b/src/ibusenginesimple.c
+index c57a3ea5..69d37cee 100644
+--- a/src/ibusenginesimple.c
++++ b/src/ibusenginesimple.c
+@@ -520,7 +520,7 @@ check_emoji_table (IBusEngineSimple       *simple,
+         g_object_ref_sink (priv->lookup_table);
+     }
+     if (emoji_dict == NULL)
+-        emoji_dict = priv->emoji_dict = load_emoji_dict (simple);
++        emoji_dict = priv->emoji_dict = load_emoji_dict ();
+
+     if (emoji_dict == NULL || emoji_dict->dict == NULL)
+         return FALSE;
